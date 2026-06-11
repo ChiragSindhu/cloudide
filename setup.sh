@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "Running setup"
+echo "Running setup2"
 
 chmod -R 755 .
 
