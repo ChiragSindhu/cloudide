@@ -1,6 +1,6 @@
-# Cloud Python Compiler
+# Cloud IDE | Cloud Complier
 
-A minimal, production-oriented Cloud IDE for executing Python code inside isolated Docker containers on a virtual machine.
+A minimal, production-oriented Cloud IDE for executing Python/c/c++/java code inside isolated Docker containers on a virtual machine.
 
 ## Overview
 
@@ -33,6 +33,202 @@ The main goal of the project is to demonstrate how container-based code executio
 - Clean frontend built with HTML, CSS, and vanilla JavaScript
 - Docker Compose based local deployment
 - VM-friendly architecture for self-hosting
+
+# Project Links
+
+| Service               | URL                                    | Description                                    |
+| --------------------- | -------------------------------------- | ---------------------------------------------- |
+| Cloud Python Compiler | https://cloudide.webhop.me             | Main IDE for writing and executing Python code |
+| Debug Dashboard       | https://cloudide.webhop.me/debug       | Real-time monitoring dashboard                 |
+| API Documentation     | http://localhost:8000/docs             | Interactive Swagger/OpenAPI documentation      |
+| OpenAPI Schema        | http://localhost:8000/openapi.json     | Raw OpenAPI specification                      |
+| Health Check          | https://cloudide.webhop.me/health      | Backend health endpoint                        |
+| Metrics API           | https://cloudide.webhop.me/api/metrics | Runtime metrics                                |
+| Events API            | https://cloudide.webhop.me/api/events  | Recent backend events                          |
+| Debug WebSocket       | ws://cloudide.webhop.me/ws/debug       | Live event stream                              |
+
+---
+
+# Author & Credits
+
+| Field             | Details                                                             |
+| ----------------- | ------------------------------------------------------------------- |
+| Project Name      | Cloud Python Compiler                                               |
+| Version           | 1.0.0                                                               |
+| Author            | Chirag Sindhu                                                       |
+| Technology Stack  | FastAPI, Redis, Docker, Uvicorn, HTML, CSS, JavaScript              |
+| Architecture      | Containerized Cloud Execution Platform                              |
+| Purpose           | Virtualization, Containerization, and Cloud Computing Demonstration |
+| License           | MIT                                                                 |
+| Hosting Platform  | Virtual Machine with Docker Compose                                 |
+| Execution Model   | One Container Per Request                                           |
+| Storage Layer     | Redis                                                               |
+| API Specification | OpenAPI 3.1                                                         |
+
+---
+
+# Screenshots
+
+## Main Cloud IDE
+
+> Save screenshot as:
+
+```text
+docs/images/cloud-ide-home.png
+```
+
+![Main IDE](docs/images/cloud-ide-home.png)
+
+The Cloud IDE allows users to write Python code, execute it inside isolated Docker containers, and view execution output in real time.
+
+---
+
+## Debug Dashboard
+
+> Save screenshot as:
+
+```text
+docs/images/debug-dashboard.png
+```
+
+![Debug Dashboard](docs/images/debug-dashboard.png)
+
+The Debug Dashboard provides real-time visibility into active executions, backend activity, execution logs, container lifecycle events, and system metrics.
+
+---
+
+## API Documentation
+
+> Save screenshot as:
+
+```text
+docs/images/api-docs.png
+```
+
+![API Documentation](docs/images/api-docs.png)
+
+Interactive OpenAPI documentation generated automatically by FastAPI.
+
+---
+
+# Container Security & Resource Limits
+
+| Resource               | Limit                 |
+| ---------------------- | --------------------- |
+| Maximum Runtime        | 30 Seconds            |
+| Memory Limit           | 256 MB                |
+| CPU Limit              | 1 Core                |
+| Network Access         | Disabled              |
+| Filesystem             | Read Only             |
+| User Privileges        | Non-root User         |
+| Redis Access           | Blocked               |
+| Docker Socket Access   | Blocked               |
+| Host Filesystem Access | Blocked               |
+| Container Lifecycle    | Created Per Execution |
+| Cleanup Policy         | Automatic Removal     |
+
+---
+
+# Live Monitoring Features
+
+| Feature              | Description                   |
+| -------------------- | ----------------------------- |
+| Active Executions    | Currently running code        |
+| Completed Executions | Successful executions         |
+| Failed Executions    | Runtime failures              |
+| Timeout Executions   | Jobs exceeding runtime limits |
+| Execution Logs       | Real-time stdout/stderr       |
+| Event Stream         | Backend lifecycle events      |
+| Container Monitoring | Creation and removal tracking |
+| Metrics Dashboard    | System statistics             |
+| Recent Executions    | Last 100 executions           |
+| WebSocket Updates    | Live dashboard updates        |
+
+---
+
+# Available API Endpoints
+
+| Method | Endpoint                 | Description               |
+| ------ | ------------------------ | ------------------------- |
+| POST   | /api/execute             | Execute Python code       |
+| GET    | /api/execution/{id}      | Get execution details     |
+| GET    | /api/execution/{id}/logs | Get execution logs        |
+| GET    | /api/metrics             | Get runtime metrics       |
+| GET    | /api/events              | Get recent backend events |
+| POST   | /api/metrics/reset       | Reset metrics             |
+| GET    | /health                  | Health check              |
+| GET    | /debug                   | Debug dashboard           |
+| GET    | /docs                    | Swagger UI                |
+| GET    | /openapi.json            | OpenAPI schema            |
+| WS     | /ws/debug                | Live event stream         |
+
+---
+
+# System Architecture
+
+```text
+Browser
+   │
+   ▼
+FastAPI Application
+   │
+   ▼
+Redis (State, Metrics, Logs)
+   │
+   ▼
+Execution Service
+   │
+   ▼
+Docker Engine
+   │
+   ▼
+Isolated Python Container
+   │
+   ▼
+Python Code Execution
+   │
+   ▼
+Results + Logs + Metrics
+```
+
+---
+
+# Execution Lifecycle
+
+```text
+User Clicks Execute
+        │
+        ▼
+Create Execution ID
+        │
+        ▼
+Store Metadata In Redis
+        │
+        ▼
+Create Docker Container
+        │
+        ▼
+Copy User Code
+        │
+        ▼
+Start Execution
+        │
+        ▼
+Stream Logs To Redis
+        │
+        ▼
+Update Dashboard Via WebSocket
+        │
+        ▼
+Capture Output & Metrics
+        │
+        ▼
+Destroy Container
+        │
+        ▼
+Store Final Status
+```
+
 
 ## Architecture
 
@@ -80,12 +276,15 @@ This makes the project a good example of containerized sandbox execution in a cl
 ### Frontend
 
 - HTML
-- CSS
+- Tailwind CSS
 - Vanilla JavaScript
 
 ### Deployment
 
 - Docker
+- Images
+- Image containers
+- seperate docker containers
 - Docker Compose
 - Virtual machine hosting
 
