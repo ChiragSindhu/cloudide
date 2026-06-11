@@ -1,0 +1,28 @@
+cloud-ide/
+├── backend/
+│   ├── main.py
+│   ├── requirements.txt
+│   ├── Dockerfile
+│   ├── config.py
+│   ├── routes/
+│   │   ├── __init__.py
+│   │   ├── execution.py
+│   │   └── metrics.py
+│   ├── services/
+│   │   ├── __init__.py
+│   │   ├── executor.py
+│   │   └── redis_manager.py
+│   └── websocket/
+│       ├── __init__.py
+│       └── manager.py
+├── frontend/
+│   ├── index.html
+│   ├── debug.html
+│   ├── styles.css
+│   ├── app.js
+│   └── debug.js
+├── runner/
+│   ├── Dockerfile
+│   └── requirements.txt
+├── docker-compose.yml
+└── README.md

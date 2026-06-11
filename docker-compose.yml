@@ -1,0 +1,35 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: cloud-ide-backend
+    ports:
+      - "${APP_PORT}:8000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./frontend:/app/frontend:ro
+    environment:
+      - REDIS_HOST=localhost
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+    depends_on:
+      redis:
+        condition: service_healthy
+      runner:
+        condition: service_completed_successfully
+    networks:
+      - cloud-ide-network
+    restart: unless-stopped
+
+  runner:
+    build:
+      context: ./runner
+      dockerfile: Dockerfile
+    image: python-runner:latest
+    container_name: cloud-ide-runner-build
+    command: ["python", "--version"]
+
+networks:
+  cloud-ide-network:
+    driver: bridge

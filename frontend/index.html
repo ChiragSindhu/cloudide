@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cloud IDE</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  :root {
+    --bg: #ffffff;
+    --bg-2: #fafafa;
+    --bg-3: #f5f5f5;
+    --border: #e5e5e5;
+    --border-active: #171717;
+    --text: #171717;
+    --text-2: #525252;
+    --text-3: #a3a3a3;
+    --gutter: #f7f7f7;
+    --gutter-text: #c4c4c4;
+    --selection: #e8e8e8;
+    --tab-active-line: #171717;
+    --error: #dc2626;
+    --success: #16a34a;
+    --warn: #d97706;
+    --running: #2563eb;
+    --tag-bg: #f0f0f0;
+  }
+  [data-theme="dark"] {
+    --bg: #111111;
+    --bg-2: #181818;
+    --bg-3: #222222;
+    --border: #2a2a2a;
+    --border-active: #fafafa;
+    --text: #fafafa;
+    --text-2: #a3a3a3;
+    --text-3: #525252;
+    --gutter: #161616;
+    --gutter-text: #404040;
+    --selection: #2a2a2a;
+    --tab-active-line: #fafafa;
+    --error: #f87171;
+    --success: #4ade80;
+    --warn: #fbbf24;
+    --running: #60a5fa;
+    --tag-bg: #222222;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 13px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Transitions only on theme-relevant props */
+  body, header, .panel, .tab-bar, .toolbar, .output-block, .info-grid-item, .log-row, .status-bar, select, button {
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  }
+
+  /* ── Layout ─────────────────────────────────────────── */
+  .app-shell {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    height: 48px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+    flex-shrink: 0;
+    z-index: 10;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .wordmark {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+
+  .header-divider {
+    width: 1px;
+    height: 16px;
+    background: var(--border);
+  }
+
+  .header-sub {
+    font-size: 12px;
+    color: var(--text-3);
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text-2);
+    cursor: pointer;
+  }
+  .icon-btn:hover {
+    border-color: var(--text-3);
+    color: var(--text);
+  }
+  .icon-btn:focus-visible {
+    outline: 1px solid var(--border-active);
+    outline-offset: 1px;
+  }
+
+  .text-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 10px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text-2);
+    font-size: 12px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .text-btn:hover {
+    border-color: var(--text-3);
+    color: var(--text);
+  }
+
+  /* Editor panel split */
+  .split {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .panel {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+    overflow: hidden;
+  }
+
+  .panel-left {
+    flex: 1 1 50%;
+    border-right: 1px solid var(--border);
+    min-width: 0;
+  }
+
+  .panel-right {
+    flex: 1 1 50%;
+    min-width: 0;
+  }
+
+  /* Panel toolbar */
+  .toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 12px;
+    height: 40px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-2);
+    flex-shrink: 0;
+  }
+
+  .toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-2);
+  }
+
+  .toolbar-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-2);
+  }
+
+  .toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* Language selector */
+  .lang-select-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .lang-select {
+    appearance: none;
+    -webkit-appearance: none;
+    height: 26px;
+    padding: 0 28px 0 8px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 12px;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    outline: none;
+  }
+  .lang-select:focus {
+    border-color: var(--border-active);
+  }
+
+  .lang-select-icon {
+    position: absolute;
+    right: 6px;
+    pointer-events: none;
+    color: var(--text-3);
+  }
+
+  /* ── Code editor ─────────────────────────────────────── */
+  .editor-wrap {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 20px;
+    position: relative;
+  }
+
+  .line-numbers {
+    flex-shrink: 0;
+    width: 44px;
+    padding: 12px 0;
+    background: var(--gutter);
+    border-right: 1px solid var(--border);
+    overflow: hidden;
+    user-select: none;
+    text-align: right;
+  }
+
+  .line-number {
+    display: block;
+    padding: 0 10px 0 0;
+    color: var(--gutter-text);
+    font-size: 12px;
+    line-height: 20px;
+  }
+
+  .line-number.current {
+    color: var(--text-3);
+  }
+
+  #codeEditor {
+    flex: 1;
+    padding: 12px 14px;
+    background: var(--bg);
+    color: var(--text);
+    border: none;
+    outline: none;
+    resize: none;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 20px;
+    overflow: auto;
+    caret-color: var(--text);
+    tab-size: 4;
+  }
+  #codeEditor::selection {
+    background: var(--selection);
+  }
+  #codeEditor::placeholder {
+    color: var(--text-3);
+  }
+
+  /* Disabled state for editor */
+  #codeEditor:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  /* ── Status bar ──────────────────────────────────────── */
+  .status-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 12px;
+    height: 36px;
+    border-top: 1px solid var(--border);
+    background: var(--bg-2);
+    flex-shrink: 0;
+    gap: 12px;
+  }
+
+  .status-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-3);
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--text-3);
+    flex-shrink: 0;
+  }
+
+  .status-dot[data-state="running"] {
+    background: var(--running);
+    animation: blink 1s step-end infinite;
+  }
+  .status-dot[data-state="success"] { background: var(--success); }
+  .status-dot[data-state="error"] { background: var(--error); }
+  .status-dot[data-state="ready"] { background: var(--text-3); }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.2; }
+  }
+
+  .cursor-pos {
+    font-size: 11px;
+    color: var(--text-3);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .run-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 26px;
+    padding: 0 12px;
+    background: var(--text);
+    color: var(--bg);
+    font-size: 12px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.1s ease;
+  }
+  .run-btn:hover { opacity: 0.85; }
+  .run-btn:active { opacity: 0.7; }
+  .run-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .run-btn:focus-visible {
+    outline: 1px solid var(--border-active);
+    outline-offset: 2px;
+  }
+
+  kbd-hint {
+    font-size: 10px;
+    color: var(--text-3);
+    font-family: 'JetBrains Mono', monospace;
+    margin-left: 4px;
+  }
+
+  /* ── Tab bar ─────────────────────────────────────────── */
+  .tab-bar {
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-2);
+    flex-shrink: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .tab-bar::-webkit-scrollbar { display: none; }
+
+  .tab {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 40px;
+    padding: 0 14px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-3);
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    white-space: nowrap;
+    transition: color 0.1s ease, border-color 0.1s ease;
+  }
+  .tab:hover { color: var(--text-2); }
+  .tab.active {
+    color: var(--text);
+    border-bottom-color: var(--tab-active-line);
+  }
+  .tab:focus-visible {
+    outline: 1px solid var(--border-active);
+    outline-offset: -1px;
+  }
+
+  /* ── Output pane ─────────────────────────────────────── */
+  .output-pane {
+    flex: 1;
+    overflow: auto;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .output-block {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .output-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-3);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .output-pre {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    line-height: 19px;
+    color: var(--text);
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    padding: 10px 12px;
+    min-height: 48px;
+    white-space: pre-wrap;
+    word-break: break-all;
+    overflow-x: auto;
+  }
+
+  .output-pre.stderr-pre {
+    color: var(--error);
+  }
+
+  .output-pre.empty {
+    color: var(--text-3);
+  }
+
+  /* Fade-in animation for output content */
+  @keyframes contentIn {
+    from { opacity: 0; transform: translateY(3px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .output-pre.has-content {
+    animation: contentIn 0.2s ease forwards;
+  }
+
+  /* ── Logs ────────────────────────────────────────────── */
+  .logs-pane {
+    flex: 1;
+    overflow: auto;
+    padding: 14px;
+  }
+
+  .log-row {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--border);
+    animation: logSlide 0.15s ease forwards;
+  }
+  .log-row:last-child { border-bottom: none; }
+
+  @keyframes logSlide {
+    from { opacity: 0; transform: translateX(-4px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .log-time {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-3);
+    flex-shrink: 0;
+    width: 72px;
+  }
+
+  .log-type-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    flex-shrink: 0;
+    width: 52px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .log-type-tag.INFO { color: var(--running); }
+  .log-type-tag.ERROR { color: var(--error); }
+  .log-type-tag.WARN { color: var(--warn); }
+  .log-type-tag.DEBUG { color: var(--text-3); }
+  .log-type-tag.SUCCESS { color: var(--success); }
+
+  .log-msg {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-2);
+    word-break: break-word;
+  }
+
+  .logs-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 80px;
+    font-size: 12px;
+    color: var(--text-3);
+  }
+
+  /* ── Info grid ───────────────────────────────────────── */
+  .info-pane {
+    flex: 1;
+    overflow: auto;
+    padding: 14px;
+  }
+
+  .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+
+  .info-grid-item {
+    background: var(--bg);
+    padding: 12px 14px;
+  }
+
+  .info-key {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--text-3);
+    margin-bottom: 5px;
+  }
+
+  .info-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text);
+    word-break: break-all;
+  }
+
+  .info-val.muted { color: var(--text-3); }
+  .info-val.success { color: var(--success); }
+  .info-val.error { color: var(--error); }
+
+   /* ── Scrollbar ───────────────────────────────────────── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-3); }
+
+  /* ── Responsive: stack on mobile ────────────────────── */
+  @media (max-width: 768px) {
+    .split { flex-direction: column; }
+    .panel-left { border-right: none; border-bottom: 1px solid var(--border); flex: none; height: 50vh; }
+    .panel-right { flex: 1; min-height: 0; }
+    .header-sub { display: none; }
+    .header-divider { display: none; }
+    .info-grid { grid-template-columns: 1fr; }
+  }
+
+  /* Hidden helper */
+  [hidden] { display: none !important; }
+
+  .tab-content { display: none; flex-direction: column; flex: 1; overflow: hidden; }
+  .tab-content.active { display: flex; }
+
+  /* Coming soon badge */
+  .badge-soon {
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-3);
+    background: var(--tag-bg);
+    padding: 1px 5px;
+    border: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- Header -->
+  <header>
+    <div class="header-left">
+      <i data-lucide="cloud" style="width:16px;height:16px;color:var(--text-2)"></i>
+      <span class="wordmark">Cloud IDE</span>
+      <div class="header-divider"></div>
+      <span class="header-sub">Isolated Docker execution</span>
+    </div>
+    <div class="header-right">
+      <button class="text-btn" id="debugBtn">
+        <i data-lucide="activity" style="width:13px;height:13px"></i>
+        <span>Debug</span>
+      </button>
+      <button class="icon-btn" id="themeBtn" title="Toggle theme">
+        <i data-lucide="moon" id="themeIcon" style="width:14px;height:14px"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Split editor -->
+  <div class="split">
+
+    <!-- Left: editor -->
+    <div class="panel panel-left">
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <i data-lucide="file-code" style="width:13px;height:13px"></i>
+          <span class="toolbar-label">main.py</span>
+        </div>
+        <div class="toolbar-right">
+          <div class="lang-select-wrap">
+            <select class="lang-select" id="langSelect">
+              <option value="python3.14">Python 3.14</option>
+              <option value="python3.12">Python 3.12</option>
+              <option value="python3.10">Python 3.10</option>
+              <option value="c" disabled>C &nbsp;&nbsp;(soon)</option>
+              <option value="cpp" disabled>C++ (soon)</option>
+              <option value="java" disabled>Java (soon)</option>
+              <option value="go" disabled>Go (soon)</option>
+            </select>
+            <i data-lucide="chevron-down" class="lang-select-icon" style="width:11px;height:11px"></i>
+          </div>
+          <button class="text-btn" id="clearBtn">
+            <i data-lucide="trash-2" style="width:12px;height:12px"></i>
+            Clear
+          </button>
+        </div>
+      </div>
+
+      <div class="editor-wrap">
+        <div class="line-numbers" id="lineNumbers">
+          <span class="line-number current">1</span>
+        </div>
+        <textarea id="codeEditor" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="# Write Python here…"></textarea>
+      </div>
+
+      <div class="status-bar">
+        <div class="status-left">
+          <div class="status-indicator" id="statusIndicator">
+            <div class="status-dot" id="statusDot" data-state="ready"></div>
+            <span id="statusText">Ready</span>
+          </div>
+          <span class="cursor-pos" id="cursorPos">Ln 1, Col 1</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;color:var(--text-3)">Ctrl+Enter</span>
+          <button class="run-btn" id="runBtn">
+            <i data-lucide="play" style="width:12px;height:12px"></i>
+            Run
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: output -->
+    <div class="panel panel-right">
+      <div class="tab-bar">
+        <button class="tab active" data-tab="output">
+          <i data-lucide="terminal" style="width:12px;height:12px"></i>
+          Output
+        </button>
+        <button class="tab" data-tab="logs">
+          <i data-lucide="list" style="width:12px;height:12px"></i>
+          Logs
+        </button>
+        <button class="tab" data-tab="info">
+          <i data-lucide="info" style="width:12px;height:12px"></i>
+          Info
+        </button>
+      </div>
+
+      <!-- Output tab -->
+      <div class="tab-content active" id="tab-output">
+        <div class="output-pane">
+          <div class="output-block">
+            <div class="output-label">
+              <i data-lucide="terminal" style="width:11px;height:11px"></i>
+              stdout
+            </div>
+            <pre class="output-pre empty" id="stdout">Run your code to see output.</pre>
+          </div>
+          <div class="output-block">
+            <div class="output-label" style="color:var(--error)">
+              <i data-lucide="alert-triangle" style="width:11px;height:11px"></i>
+              stderr
+            </div>
+            <pre class="output-pre stderr-pre empty" id="stderr">No errors.</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- Logs tab -->
+      <div class="tab-content" id="tab-logs">
+        <div class="logs-pane" id="logsPane">
+          <div class="logs-empty" id="logsEmpty">No logs yet. Run your code first.</div>
+          <div id="logsContainer"></div>
+        </div>
+      </div>
+
+      <!-- Info tab -->
+      <div class="tab-content" id="tab-info">
+        <div class="info-pane">
+          <div class="info-grid">
+            <div class="info-grid-item">
+              <div class="info-key">Execution ID</div>
+              <div class="info-val muted" id="infoId">—</div>
+            </div>
+            <div class="info-grid-item">
+              <div class="info-key">Status</div>
+              <div class="info-val muted" id="infoStatus">—</div>
+            </div>
+            <div class="info-grid-item">
+              <div class="info-key">Duration</div>
+              <div class="info-val muted" id="infoDuration">—</div>
+            </div>
+            <div class="info-grid-item">
+              <div class="info-key">Exit Code</div>
+              <div class="info-val muted" id="infoExit">—</div>
+            </div>
+            <div class="info-grid-item">
+              <div class="info-key">Language</div>
+              <div class="info-val muted" id="infoLang">—</div>
+            </div>
+            <div class="info-grid-item">
+              <div class="info-key">Created</div>
+              <div class="info-val muted" id="infoCreated">—</div>
+            </div>
+            <div class="info-grid-item">
+              <div class="info-key">Completed</div>
+              <div class="info-val muted" id="infoCompleted">—</div>
+            </div>
+            <div class="info-grid-item">
+              <div class="info-key">Container</div>
+              <div class="info-val muted" id="infoContainer">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- app-shell -->
+
+
+<script src="/static/app.js"></script>
+</body>
+</html>

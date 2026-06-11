@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Debug — Cloud IDE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  :root {
+    --bg: #ffffff;
+    --bg-2: #fafafa;
+    --bg-3: #f5f5f5;
+    --border: #e5e5e5;
+    --border-active: #171717;
+    --text: #171717;
+    --text-2: #525252;
+    --text-3: #a3a3a3;
+    --error: #dc2626;
+    --success: #16a34a;
+    --warn: #d97706;
+    --info: #2563eb;
+  }
+  [data-theme="dark"] {
+    --bg: #111111;
+    --bg-2: #181818;
+    --bg-3: #222222;
+    --border: #2a2a2a;
+    --border-active: #fafafa;
+    --text: #fafafa;
+    --text-2: #a3a3a3;
+    --text-3: #525252;
+    --error: #f87171;
+    --success: #4ade80;
+    --warn: #fbbf24;
+    --info: #60a5fa;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    min-height: 100%;
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 13px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body, header, .metric-card, .section-wrap, .event-row, select, button, table {
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  }
+
+  /* ── Header ─────────────────────────────────────────── */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    height: 48px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .wordmark {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+
+  .hd { width: 1px; height: 16px; background: var(--border); }
+  .sub { font-size: 12px; color: var(--text-3); }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text-2);
+    cursor: pointer;
+  }
+  .icon-btn:hover { border-color: var(--text-3); color: var(--text); }
+
+  .text-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 10px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text-2);
+    font-size: 12px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    text-decoration: none;
+  }
+  .text-btn:hover { border-color: var(--text-3); color: var(--text); }
+
+  /* WS badge */
+  .ws-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 26px;
+    padding: 0 8px;
+    border: 1px solid var(--border);
+    background: var(--bg-2);
+  }
+
+  .ws-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--text-3);
+    flex-shrink: 0;
+  }
+  .ws-dot[data-state="connected"] { background: var(--success); }
+  .ws-dot[data-state="disconnected"] { background: var(--error); }
+  .ws-dot[data-state="connecting"] {
+    background: var(--warn);
+    animation: blink 1s step-end infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.2; }
+  }
+
+  .ws-label {
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-3);
+  }
+
+  /* ── Layout ─────────────────────────────────────────── */
+  .page {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* ── Metric strip ────────────────────────────────────── */
+  .metrics-strip {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    border: 1px solid var(--border);
+  }
+
+  .metric-card {
+    padding: 14px 16px;
+    border-right: 1px solid var(--border);
+    background: var(--bg);
+  }
+  .metric-card:last-child { border-right: none; }
+
+  .metric-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--text-3);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .metric-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  .metric-value.c-info  { color: var(--info); }
+  .metric-value.c-success { color: var(--success); }
+  .metric-value.c-error { color: var(--error); }
+  .metric-value.c-warn  { color: var(--warn); }
+
+  /* ── Two column body ─────────────────────────────────── */
+  .body-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+
+  .section-wrap {
+    border: 1px solid var(--border);
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 14px;
+    height: 40px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-2);
+    flex-shrink: 0;
+  }
+
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-2);
+  }
+
+  /* ── Active executions ───────────────────────────────── */
+  .exec-list {
+    min-height: 120px;
+  }
+
+  .exec-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 0;
+    font-size: 12px;
+    color: var(--text-3);
+  }
+
+  .exec-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    gap: 12px;
+    animation: rowIn 0.15s ease forwards;
+  }
+  .exec-row:last-child { border-bottom: none; }
+
+  @keyframes rowIn {
+    from { opacity: 0; transform: translateY(-3px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .exec-left { flex: 1; min-width: 0; }
+
+  .exec-id {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 3px;
+  }
+
+  .exec-meta {
+    font-size: 11px;
+    color: var(--text-3);
+  }
+
+  .exec-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .exec-status {
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--info);
+  }
+
+  /* Progress bar */
+  .prog-track {
+    width: 60px;
+    height: 2px;
+    background: var(--border);
+    overflow: hidden;
+  }
+
+  .prog-bar {
+    height: 100%;
+    width: 35%;
+    background: var(--info);
+    animation: sweep 1.4s ease-in-out infinite;
+    transform-origin: left;
+  }
+
+  @keyframes sweep {
+    0%   { transform: translateX(-100%) scaleX(0.4); }
+    50%  { transform: translateX(100%) scaleX(1); }
+    100% { transform: translateX(280%) scaleX(0.4); }
+  }
+
+  /* ── Event stream ────────────────────────────────────── */
+  .event-stream-body {
+    overflow-y: auto;
+    max-height: 560px;
+  }
+  .event-stream-body::-webkit-scrollbar { width: 4px; }
+  .event-stream-body::-webkit-scrollbar-track { background: transparent; }
+  .event-stream-body::-webkit-scrollbar-thumb { background: var(--border); }
+
+  .event-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 0;
+    font-size: 12px;
+    color: var(--text-3);
+  }
+
+  /* Each event row */
+  .event-row {
+    display: grid;
+    grid-template-columns: 70px 16px 96px 1fr;
+    align-items: start;
+    gap: 10px;
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--border);
+    animation: eventIn 0.18s ease forwards;
+  }
+  .event-row:last-child { border-bottom: none; }
+
+  @keyframes eventIn {
+    from { opacity: 0; transform: translateX(-6px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  .event-row:hover { background: var(--bg-2); }
+
+  .ev-time {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--text-3);
+    padding-top: 1px;
+    white-space: nowrap;
+  }
+
+  .ev-icon {
+    display: flex;
+    align-items: flex-start;
+    padding-top: 2px;
+  }
+
+  .ev-type {
+    font-size: 11px;
+    font-weight: 500;
+    padding-top: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* type colors */
+  .ev-type.started    { color: var(--info); }
+  .ev-type.completed  { color: var(--success); }
+  .ev-type.failed     { color: var(--error); }
+  .ev-type.timeout    { color: var(--warn); }
+  .ev-type.pending    { color: var(--text-3); }
+  .ev-type.container  { color: var(--text-2); }
+  .ev-type.default    { color: var(--text-2); }
+
+  .ev-body { min-width: 0; }
+
+  .ev-id {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--text-3);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 2px;
+  }
+
+  /* Expandable payload */
+  .ev-payload-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    color: var(--text-3);
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+    font-family: 'Inter', sans-serif;
+    margin-top: 2px;
+  }
+  .ev-payload-toggle:hover { color: var(--text-2); }
+
+  .ev-payload-content {
+    display: none;
+    margin-top: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    line-height: 16px;
+    color: var(--text-2);
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    padding: 8px 10px;
+    white-space: pre-wrap;
+    word-break: break-all;
+    overflow-x: auto;
+  }
+
+  .ev-payload-content.open { display: block; }
+  .ev-payload-content.open + .ev-payload-toggle .chevron-icon {
+    transform: rotate(90deg);
+  }
+
+  .chevron-icon {
+    transition: transform 0.15s ease;
+    display: inline-block;
+  }
+
+  /* ── Column header row ───────────────────────────────── */
+  .stream-col-header {
+    display: grid;
+    grid-template-columns: 70px 16px 96px 1fr;
+    gap: 10px;
+    padding: 6px 14px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-2);
+  }
+
+  .col-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--text-3);
+    font-weight: 500;
+  }
+
+  /* ── Scrollbar global ────────────────────────────────── */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-3); }
+
+  /* ── Responsive ──────────────────────────────────────── */
+  @media (max-width: 900px) {
+    .body-grid { grid-template-columns: 1fr; }
+    .metrics-strip { grid-template-columns: repeat(3, 1fr); }
+    .metric-card:nth-child(3) { border-right: none; }
+    .metric-card:nth-child(4),
+    .metric-card:nth-child(5),
+    .metric-card:nth-child(6) { border-top: 1px solid var(--border); }
+  }
+  @media (max-width: 520px) {
+    .metrics-strip { grid-template-columns: repeat(2, 1fr); }
+    .metric-card:nth-child(2) { border-right: none; }
+    .metric-card:nth-child(3),
+    .metric-card:nth-child(4),
+    .metric-card:nth-child(5),
+    .metric-card:nth-child(6) { border-top: 1px solid var(--border); }
+    .hd, .sub { display: none; }
+    .ev-id { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <i data-lucide="activity" style="width:15px;height:15px;color:var(--text-2)"></i>
+    <span class="wordmark">Debug</span>
+    <div class="hd"></div>
+    <span class="sub">Real-time backend monitor</span>
+  </div>
+  <div class="header-right">
+    <div class="ws-badge">
+      <div class="ws-dot" id="wsDot" data-state="connecting"></div>
+      <span class="ws-label" id="wsLabel">Connecting</span>
+    </div>
+    <a href="/" class="text-btn">
+      <i data-lucide="arrow-left" style="width:12px;height:12px"></i>
+      Back to IDE
+    </a>
+    <button class="icon-btn" id="themeBtn">
+      <i data-lucide="moon" id="themeIcon" style="width:14px;height:14px"></i>
+    </button>
+  </div>
+</header>
+
+<div class="page">
+
+  <!-- Metrics strip -->
+  <div class="metrics-strip" id="metricsStrip">
+    <div class="metric-card">
+      <div class="metric-label">
+        <i data-lucide="layers" style="width:10px;height:10px"></i>
+        Total
+      </div>
+      <div class="metric-value" id="mTotal">0</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">
+        <i data-lucide="loader" style="width:10px;height:10px"></i>
+        Active
+      </div>
+      <div class="metric-value c-info" id="mActive">0</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">
+        <i data-lucide="check" style="width:10px;height:10px"></i>
+        Completed
+      </div>
+      <div class="metric-value c-success" id="mCompleted">0</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">
+        <i data-lucide="x" style="width:10px;height:10px"></i>
+        Failed
+      </div>
+      <div class="metric-value c-error" id="mFailed">0</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">
+        <i data-lucide="clock" style="width:10px;height:10px"></i>
+        Timeouts
+      </div>
+      <div class="metric-value c-warn" id="mTimeouts">0</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">
+        <i data-lucide="minus" style="width:10px;height:10px"></i>
+        Pending
+      </div>
+      <div class="metric-value" id="mPending">0</div>
+    </div>
+  </div>
+
+  <!-- Body grid -->
+  <div class="body-grid">
+
+    <!-- Active executions -->
+    <div class="section-wrap">
+      <div class="section-head">
+        <div class="section-title">
+          <i data-lucide="play-circle" style="width:12px;height:12px"></i>
+          Active executions
+        </div>
+        <span id="activeCount" style="font-size:11px;color:var(--text-3);font-family:'JetBrains Mono',monospace">0</span>
+      </div>
+      <div class="exec-list" id="execList">
+        <div class="exec-empty" id="execEmpty">No active executions</div>
+      </div>
+    </div>
+
+    <!-- Event stream -->
+    <div class="section-wrap">
+      <div class="section-head">
+        <div class="section-title">
+          <i data-lucide="radio" style="width:12px;height:12px"></i>
+          Event stream
+          <span id="eventCount" style="font-size:10px;color:var(--text-3);font-family:'JetBrains Mono',monospace;margin-left:2px">0</span>
+        </div>
+        <button class="text-btn" id="clearBtn" style="height:24px;padding:0 8px;font-size:11px">
+          <i data-lucide="trash-2" style="width:11px;height:11px"></i>
+          Clear
+        </button>
+      </div>
+      <!-- Column labels -->
+      <div class="stream-col-header">
+        <span class="col-label">Time</span>
+        <span class="col-label"></span>
+        <span class="col-label">Event</span>
+        <span class="col-label">ID / Payload</span>
+      </div>
+      <div class="event-stream-body" id="eventStream">
+        <div class="event-empty" id="eventEmpty">Waiting for events…</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="/static/debug.js"></script>
+</body>
+</html>
