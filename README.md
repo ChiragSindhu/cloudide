@@ -45,7 +45,7 @@ The main goal of the project is to demonstrate how container-based code executio
 | Health Check          | https://cloudide.webhop.me/health           | Backend health endpoint                        |
 | Metrics API           | https://cloudide.webhop.me/api/metrics      | Runtime metrics                                |
 | Events API            | https://cloudide.webhop.me/api/events       | Recent backend events                          |
-| Debug WebSocket       | wsa://cloudide.webhop.me/ws/debug           | Live event stream                              |
+| Debug WebSocket       | wss://cloudide.webhop.me/ws/debug           | Live event stream                              |
 
 ---
 
