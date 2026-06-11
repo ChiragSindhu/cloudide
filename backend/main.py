@@ -11,7 +11,7 @@ from services.redis_manager import redis_manager
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    print("Starting Cloud IDE...")
+    print("Starting Cloud IDE..")
     
     # Check Redis connection
     if redis_manager.ping():
