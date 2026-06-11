@@ -36,16 +36,16 @@ The main goal of the project is to demonstrate how container-based code executio
 
 # Project Links
 
-| Service               | URL                                    | Description                                    |
-| --------------------- | -------------------------------------- | ---------------------------------------------- |
-| Cloud Python Compiler | https://cloudide.webhop.me             | Main IDE for writing and executing Python code |
-| Debug Dashboard       | https://cloudide.webhop.me/debug       | Real-time monitoring dashboard                 |
-| API Documentation     | http://localhost:8000/docs             | Interactive Swagger/OpenAPI documentation      |
-| OpenAPI Schema        | http://localhost:8000/openapi.json     | Raw OpenAPI specification                      |
-| Health Check          | https://cloudide.webhop.me/health      | Backend health endpoint                        |
-| Metrics API           | https://cloudide.webhop.me/api/metrics | Runtime metrics                                |
-| Events API            | https://cloudide.webhop.me/api/events  | Recent backend events                          |
-| Debug WebSocket       | ws://cloudide.webhop.me/ws/debug       | Live event stream                              |
+| Service               | URL                                         | Description                                    |
+| --------------------- | ------------------------------------------- | ---------------------------------------------- |
+| Cloud Python Compiler | https://cloudide.webhop.me                  | Main IDE for writing and executing Python code |
+| Debug Dashboard       | https://cloudide.webhop.me/debug            | Real-time monitoring dashboard                 |
+| API Documentation     | https://cloudide.webhop.me/docs             | Interactive Swagger/OpenAPI documentation      |
+| OpenAPI Schema        | https://cloudide.webhop.me/openapi.json     | Raw OpenAPI specification                      |
+| Health Check          | https://cloudide.webhop.me/health           | Backend health endpoint                        |
+| Metrics API           | https://cloudide.webhop.me/api/metrics      | Runtime metrics                                |
+| Events API            | https://cloudide.webhop.me/api/events       | Recent backend events                          |
+| Debug WebSocket       | wsa://cloudide.webhop.me/ws/debug           | Live event stream                              |
 
 ---
 
@@ -53,7 +53,7 @@ The main goal of the project is to demonstrate how container-based code executio
 
 | Field             | Details                                                             |
 | ----------------- | ------------------------------------------------------------------- |
-| Project Name      | Cloud Python Compiler                                               |
+| Project Name      | Cloud IDE                                               |
 | Version           | 1.0.0                                                               |
 | Author            | Chirag Sindhu                                                       |
 | Technology Stack  | FastAPI, Redis, Docker, Uvicorn, HTML, CSS, JavaScript              |
@@ -74,10 +74,10 @@ The main goal of the project is to demonstrate how container-based code executio
 > Save screenshot as:
 
 ```text
-docs/images/cloud-ide-home.png
+docs/images/1.png
 ```
 
-![Main IDE](docs/images/cloud-ide-home.png)
+![Main IDE](docs/images/1.png)
 
 The Cloud IDE allows users to write Python code, execute it inside isolated Docker containers, and view execution output in real time.
 
@@ -88,10 +88,10 @@ The Cloud IDE allows users to write Python code, execute it inside isolated Dock
 > Save screenshot as:
 
 ```text
-docs/images/debug-dashboard.png
+docs/images/2.png
 ```
 
-![Debug Dashboard](docs/images/debug-dashboard.png)
+![Debug Dashboard](docs/images/2.png)
 
 The Debug Dashboard provides real-time visibility into active executions, backend activity, execution logs, container lifecycle events, and system metrics.
 
@@ -102,10 +102,10 @@ The Debug Dashboard provides real-time visibility into active executions, backen
 > Save screenshot as:
 
 ```text
-docs/images/api-docs.png
+docs/images/3.png
 ```
 
-![API Documentation](docs/images/api-docs.png)
+![API Documentation](docs/images/3.png)
 
 Interactive OpenAPI documentation generated automatically by FastAPI.
 
