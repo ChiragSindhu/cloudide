@@ -1,219 +1,417 @@
-# ☁️ Cloud Python Compiler
+# Cloud Python Compiler
 
-A complete Cloud IDE for executing Python code in isolated Docker containers.
+A minimal, production-oriented Cloud IDE for executing Python code inside isolated Docker containers on a virtual machine.
 
-## Features
+## Overview
 
-- 🚀 Execute Python code in isolated Docker containers
-- 🔒 Secure execution with resource limits (CPU, Memory, Network)
-- 📊 Real-time execution monitoring
-- 🐛 Live debug dashboard with WebSocket updates
-- 📝 Execution logs and metrics
-- ⚡ Fast and responsive UI
-- 🎯 Simple architecture (FastAPI + Redis + Docker)
+Cloud Python Compiler is an educational virtualization and cloud execution project built with FastAPI, Uvicorn, Redis, Docker, HTML, CSS, and vanilla JavaScript. The system allows users to write Python code in a browser, execute it securely in a separate container, and observe execution results and backend activity in real time.
+
+The design follows a simple and clear cloud architecture:
+
+Browser -> FastAPI -> Redis -> Docker Runner -> Isolated Python Container -> Result and Logs
+
+The main goal of the project is to demonstrate how container-based code execution works in a cloud environment without introducing unnecessary complexity. The project intentionally avoids databases, message brokers, orchestration platforms, and heavy infrastructure components.
+
+## Key Goals
+
+- Run every user request in a fresh Docker container
+- Keep execution isolated from the FastAPI server
+- Store live execution state and logs in Redis only
+- Provide a real-time debug dashboard
+- Enforce strict runtime, CPU, and memory limits
+- Keep the codebase simple, readable, and easy to extend
+
+## Core Features
+
+- Browser-based Python editor
+- One-container-per-execution model
+- Real-time stdout and stderr capture
+- Execution status tracking
+- Live debug dashboard
+- Runtime logs and event stream
+- System metrics and worker monitoring
+- Clean frontend built with HTML, CSS, and vanilla JavaScript
+- Docker Compose based local deployment
+- VM-friendly architecture for self-hosting
 
 ## Architecture
 
-Browser → FastAPI → Redis → Docker Container → Isolated Python Execution
+The project is designed to run on a virtual machine with Docker installed.
+
+### Request Flow
+
+1. A user writes Python code in the browser.
+2. The frontend sends the code to the FastAPI backend.
+3. FastAPI creates a unique execution ID and stores metadata in Redis.
+4. A dedicated Docker container is created for that execution.
+5. The code is copied into the container.
+6. The container runs the code in a restricted environment.
+7. Stdout, stderr, and events are streamed back in real time.
+8. Execution results are written to Redis.
+9. The container is removed after completion or timeout.
+10. The frontend receives the final status and logs.
+
+### Isolation Model
+
+Each execution runs in a fresh container. The code never runs inside the FastAPI process.
+
+The container is restricted so it cannot:
+
+- Access the FastAPI application internals
+- Access Redis directly
+- Access the host filesystem
+- Access the Docker socket
+- Communicate with internal services
+- Open network connections
+
+This makes the project a good example of containerized sandbox execution in a cloud environment.
 
 ## Tech Stack
 
-**Backend:**
+### Backend
+
 - Python 3.12+
 - FastAPI
 - Uvicorn
 - Redis
-- Docker SDK
+- Docker SDK for Python
+- Asyncio
 
-**Frontend:**
-- HTML5
-- CSS3
+### Frontend
+
+- HTML
+- CSS
 - Vanilla JavaScript
 
-**Infrastructure:**
-- Docker
-- Docker Compose
-- Redis
-
-## Quick Start
-
-### Prerequisites
+### Deployment
 
 - Docker
 - Docker Compose
+- Virtual machine hosting
 
-### Installation
+## Execution Environment
 
-1. Clone the repository:
-```bash
-git clone <repository-url>
-cd cloud-ide
+A dedicated runner image is used for Python execution.
 
-Build and start services:
-Bash
+### Base Image
 
-docker-compose up --build
-Access the application:
-IDE: http://localhost:8000
-Debug Dashboard: http://localhost:8000/debug
-API Docs: http://localhost:8000/docs
-Usage
-Main IDE
-Write Python code in the editor
-Click "Execute" or press Ctrl+Enter
-View output, errors, and logs in real-time
-Check execution information in the Info tab
-Debug Dashboard
-Access http://localhost:8000/debug to monitor:
+- python:3.12-slim
 
-System metrics (total, active, completed, failed executions)
-Active executions with elapsed time
-Real-time event stream
-Backend activity
-Security
-Code execution is completely isolated:
+### Preinstalled Python Modules
 
-✅ Separate Docker container per execution
-✅ No network access
-✅ Memory limit: 256MB
-✅ CPU limit: 1 core
-✅ Execution timeout: 30 seconds
-✅ No access to host filesystem
-✅ No access to Redis or FastAPI
-✅ Non-root user inside container
-API Endpoints
-Execute Code
-http
+The runner image is intended to support common built-in and standard-library-oriented Python workflows, including:
 
-POST /api/execute
-Content-Type: application/json
+- collections
+- heapq
+- math
+- itertools
+- functools
+- bisect
+- statistics
+- string
+- random
+- decimal
+- fractions
+- datetime
+- time
+- json
+- re
+- typing
+- dataclasses
+- queue
+- threading
+- multiprocessing
+- pathlib
+- hashlib
+- base64
 
+The runner image should remain lightweight and easy to update later.
+
+## Resource Limits
+
+Every execution container should use strict resource controls:
+
+- Maximum runtime: 30 seconds
+- Memory limit: 256 MB
+- CPU limit: 1 core
+- Network: disabled
+- Filesystem: read-only where possible
+- Non-root execution user
+- Automatic container cleanup after completion
+
+### Failure States
+
+The system should map failures to clear execution states:
+
+- TIMEOUT
+- MEMORY_LIMIT_EXCEEDED
+- RUNTIME_ERROR
+- INTERNAL_ERROR
+
+## Redis Usage
+
+Redis is the only storage layer in the project.
+
+No database is used, and no persistence beyond runtime is required.
+
+### Stored Data
+
+#### Execution Metadata
+- execution_id
+- status
+- created_at
+- started_at
+- completed_at
+- duration
+
+#### Execution Logs
+- stdout
+- stderr
+- events
+
+#### Live Metrics
+- total executions
+- active executions
+- completed executions
+- failed executions
+- timeout executions
+
+#### Worker Status
+- currently running jobs
+- queue size
+- recent errors
+
+### Recommended Redis Structures
+
+- Hashes for execution metadata
+- Lists for ordered execution logs
+- Streams for real-time events
+- Simple counters for metrics
+
+This keeps storage efficient and easy to reason about.
+
+## Real-Time Debug Dashboard
+
+The project includes a separate debug page at `/debug`.
+
+The dashboard is intended for live operational visibility during development, testing, and demonstrations.
+
+### Dashboard Capabilities
+
+- Live server metrics
+- Active execution list
+- Current job status
+- Execution timing
+- Event stream updates
+- Runtime error panel
+- Recent execution history
+- WebSocket-based real-time refresh
+
+### Events to Display
+
+- Execution Created
+- Container Created
+- Container Started
+- Code Copied
+- Execution Started
+- Stdout Chunk
+- Stderr Chunk
+- Execution Completed
+- Execution Failed
+- Execution Timeout
+- Container Removed
+
+This makes it easier to understand how the backend behaves under load and how each execution moves through the system.
+
+## Frontend UI
+
+The frontend should remain simple and professional.
+
+### Main IDE Page
+
+The main page should include:
+
+- Code editor
+- Execute button
+- Status display
+- Stdout output panel
+- Stderr output panel
+- Execution time display
+- Logs and runtime information
+
+### Design Principles
+
+- Clean layout
+- Minimal distractions
+- No frontend frameworks
+- Fast loading
+- Easy to understand for demos and learning
+
+## API Endpoints
+
+### Execute Code
+
+`POST /api/execute`
+
+Request body:
+
+```json
 {
-  "code": "print('Hello, World!')"
+  "code": "print('hello')"
 }
-Get Execution Status
-http
+```
 
-GET /api/execution/{execution_id}
-Get Execution Logs
-http
+Response:
 
-GET /api/execution/{execution_id}/logs
-Get Metrics
-http
+```json
+{
+  "execution_id": "uuid"
+}
+```
 
-GET /api/metrics
-WebSocket Debug Stream
-text
+### Get Execution Status
 
-ws://localhost:8000/ws/debug
-Development
-Project Structure
-text
+`GET /api/execution/{execution_id}`
 
-cloud-ide/
+Returns:
+
+```json
+{
+  "status": "SUCCESS",
+  "stdout": "...",
+  "stderr": "...",
+  "duration": 0.42
+}
+```
+
+### Get Execution Logs
+
+`GET /api/execution/{execution_id}/logs`
+
+### Get Metrics
+
+`GET /api/metrics`
+
+Returns:
+
+```json
+{
+  "active": 0,
+  "completed": 0,
+  "failed": 0,
+  "timeout": 0
+}
+```
+
+### Debug Events WebSocket
+
+`/ws/debug`
+
+Pushes live backend events to the debug dashboard in real time.
+
+## Logging and Monitoring
+
+Every major backend action should emit an event and write it to Redis.
+
+### Example Events
+
+- Execution created
+- Container created
+- Container started
+- Code copied into container
+- Execution started
+- Stdout received
+- Stderr received
+- Execution completed
+- Execution failed
+- Execution timed out
+- Container destroyed
+
+This event-driven approach gives the project strong visibility without requiring additional infrastructure.
+
+## Project Structure
+
+```text
+cloud-python-compiler/
 ├── backend/
-│   ├── main.py              # FastAPI application
-│   ├── config.py            # Configuration
-│   ├── routes/              # API routes
-│   ├── services/            # Business logic
-│   └── websocket/           # WebSocket handlers
+│   ├── main.py
+│   ├── config.py
+│   ├── redis_manager.py
+│   ├── websocket_manager.py
+│   ├── routes/
+│   ├── services/
+│   └── execution/
 ├── frontend/
-│   ├── index.html           # Main IDE
-│   ├── debug.html           # Debug dashboard
-│   ├── styles.css           # Styling
-│   ├── app.js               # IDE logic
-│   └── debug.js             # Dashboard logic
+│   ├── index.html
+│   ├── debug.html
+│   ├── styles.css
+│   ├── app.js
+│   └── debug.js
 ├── runner/
-│   └── Dockerfile           # Python execution environment
-└── docker-compose.yml       # Orchestration
-Extending
-To add more Python packages to the runner:
+│   └── Dockerfile
+└── docker-compose.yml
+```
 
-Edit runner/requirements.txt
-Rebuild: docker-compose build runner
-Restart: docker-compose up -d
-Resource Limits
-Each execution has the following limits:
+## How It Works
 
-Max Runtime: 30 seconds
-Memory: 256 MB
-CPU: 1 core
-Network: Disabled
-Processes: 100
-Monitoring
-All events are logged to Redis and broadcast via WebSocket:
+### Backend
 
-Execution Created
-Container Created
-Container Started
-Execution Started
-Execution Completed
-Container Removed
-Execution Failed
-Execution Timeout
-Troubleshooting
-Container creation fails
-Ensure Docker socket is accessible:
+FastAPI receives user code, creates execution records, and coordinates the lifecycle of each request.
 
-Bash
+### Redis
 
-ls -la /var/run/docker.sock
-Redis connection error
-Check Redis is running:
+Redis stores execution state, logs, event history, metrics, and worker status in memory.
 
-Bash
+### Docker Runner
 
-docker-compose ps redis
-docker-compose logs redis
-Runner image not found
-Build the runner image:
+The runner service creates one isolated container per execution, applies resource limits, and captures output.
 
-Bash
+### Frontend
 
-docker-compose build runner
-License
-MIT License
+The browser UI sends code to the backend and displays the final result, logs, and live system state.
 
-Contributing
-Contributions are welcome! Please open an issue or submit a pull request.
+## Deployment
 
-Authors
-Cloud IDE Team
+The project is intended to run on a single virtual machine with Docker and Docker Compose.
 
-text
+### Typical Setup
 
+- Install Docker
+- Install Docker Compose
+- Clone the project
+- Build the runner image
+- Start the services with Docker Compose
+- Open the IDE in the browser
+- Open the debug dashboard for live monitoring
 
----
+## Security Notes
 
-## Usage Instructions
+This project is designed for educational sandbox execution, not for untrusted public internet workloads without additional hardening.
 
-### 1. Setup
+Important protections include:
 
-Create the project structure and save all files:
+- Separate container per execution
+- No shared process execution
+- No network access
+- No host filesystem access
+- No Docker socket access from user code
+- Strict runtime and memory constraints
 
-```bash
-mkdir -p cloud-ide/{backend/{routes,services,websocket},frontend,runner}
-cd cloud-ide
-2. Build and Run
-Bash
+For production internet-facing usage, additional hardening, auditing, and operational controls may be required.
 
-# Build and start all services
-docker-compose up --build
+## Educational Value
 
-# Or run in detached mode
-docker-compose up --build -d
+This project is useful for learning:
 
-# View logs
-docker-compose logs -f backend
-3. Access
-Main IDE: http://localhost:8000
-Debug Dashboard: http://localhost:8000/debug
-API Documentation: http://localhost:8000/docs
-4. Test
-Write Python code in the editor and execute. Monitor the debug dashboard to see real-time backend activity.
+- Virtualization concepts
+- Container isolation
+- Cloud execution architecture
+- Secure code runner design
+- Real-time monitoring with WebSockets
+- Redis-based state management
+- Minimal service-oriented backend design
 
-5. Stop
-Bash
+## Summary
 
-docker-compose down
+Cloud Python Compiler demonstrates a clean and practical way to run Python code in the cloud using Docker-based isolation, FastAPI orchestration, and Redis-backed live state tracking. It is intentionally minimal, easy to understand, and well suited for virtualization and cloud computing demonstrations.
+
